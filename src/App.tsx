@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as esbuild from "esbuild-wasm";
+import { unpkgPathPlugin } from "./plugins/unpkg-path-plugin";
 
 // Module-level flag to ensure initialization happens only once
 let esbuildInitialized = false;
@@ -25,13 +26,19 @@ function App() {
 
   const submitData = async () => {
     try {
-      const res = await esbuild.transform(input, {
-        loader: "jsx",
-        target: "es2015",
+      const res = await esbuild.build({
+        entryPoints: ["index.js"],
+        bundle: true,
+        write: false,
+        plugins: [unpkgPathPlugin()],
+        define: {
+          "process.env.NODE_ENV": '"production"',
+          global: "window",
+        },
       });
 
       if (res) {
-        setCode(res.code);
+        setCode(res.outputFiles[0].text);
         setInput("");
       }
     } catch (err) {
